@@ -25,7 +25,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   adminer:
-    image: adminer:4.8
+    image: adminer
     container_name: adminer
     depends_on:
       - postgres
