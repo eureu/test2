@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registered Nodes</title>
+  </head>
+  <body>
+    <h1>Registered Nodes</h1>
+    <table border="1">
+      <tr>
+        <th>Node ID</th>
+        <th>Status</th>
+        <th>Resources</th>
+      </tr>
+      {% for node in nodes %}
+      <tr>
+        <td>{{ node.node_id }}</td>
+        <td>{{ node.status }}</td>
+        <td>{{ node.resources }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>
