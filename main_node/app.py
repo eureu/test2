@@ -71,37 +71,6 @@ async def register_node(node: NodeCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-# @app.get("/nodes", response_class=HTMLResponse)
-# async def list_nodes(db: Session = Depends(get_db)):
-#     """
-#     Список всех зарегистрированных нодов.
-#     """
-#     try:
-#         nodes = db.query(Node).all()
-#         # HTML-шаблон для отображения нодов
-#         template = Template("""
-#         <!DOCTYPE html>
-#         <html>
-#         <head>
-#             <title>Nodes List</title>
-#         </head>
-#         <body>
-#             <h1>Registered Nodes</h1>
-#             <ul>
-#                 {% for node in nodes %}
-#                 <li>
-#                     <strong>Node ID:</strong> {{ node.node_id }}<br>
-#                     <strong>Status:</strong> {{ node.status }}<br>
-#                     <strong>Resources:</strong> {{ node.resources }}
-#                 </li>
-#                 {% endfor %}
-#             </ul>
-#         </body>
-#         </html>
-#         """)
-#         return template.render(nodes=nodes)
-#     except SQLAlchemyError as e:
-#         raise HTTPException(status_code=500, detail=str(e))
 @app.get("/nodes", response_model=List[NodeCreate])
 async def list_nodes(db: Session = Depends(get_db)):
     """
