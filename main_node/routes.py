@@ -32,7 +32,8 @@ async def register_node(node: NodeCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/nodes", response_model=List[NodeCreate])
+# @router.get("/nodes", response_model=List[NodeCreate])
+@router.get("/nodes")
 async def list_nodes(db: Session = Depends(get_db)):
     """
     Получение списка всех зарегистрированных узлов.
