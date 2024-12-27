@@ -30,7 +30,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - "8002:8002"
+      - "8080:8080"
 
 volumes:
   postgres_data:
