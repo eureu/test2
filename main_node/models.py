@@ -18,3 +18,4 @@ class NodeCreate(BaseModel):
     node_id: str
     status: str = "unknown"
     resources: dict = {}
+    models: list = []

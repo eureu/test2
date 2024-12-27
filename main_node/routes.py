@@ -40,3 +40,9 @@ async def list_nodes(db: Session = Depends(get_db)):
     """
     nodes = db.query(Node).all()
     return nodes
+
+@router.post("/register_model")
+async def register_model(model: ModelInfo):
+    # Обработка данных о модели
+    print(f"Registered model: {model.model_name}")
+    return {"status": "success"}
