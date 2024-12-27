@@ -41,7 +41,7 @@ async def list_nodes(db: Session = Depends(get_db)):
     nodes = db.query(Node).all()
     return nodes
 
-@router.post("/register_model")
+@router.post("/register_models")
 async def register_model(model: ModelInfo, db: Session = Depends(get_db)):
     # Обработка данных о модели
     print(f"Registered models: {model.models}")
