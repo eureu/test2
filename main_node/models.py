@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String, JSON, List
 from sqlalchemy.orm import declarative_base
 from pydantic import BaseModel
 
@@ -12,6 +12,7 @@ class Node(Base):
     node_id = Column(String, unique=True, nullable=False)
     status = Column(String, nullable=False)
     resources = Column(JSON, nullable=True)
+    models = Column(List, nullable=True)
 
 # Модели запросов и ответов
 class NodeCreate(BaseModel):
@@ -19,3 +20,7 @@ class NodeCreate(BaseModel):
     status: str = "unknown"
     resources: dict = {}
     models: list = []
+
+
+class ModelInfo(BaseModel):
+    models: List[str]  # Список моделей

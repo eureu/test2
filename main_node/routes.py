@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from models import Node, NodeCreate
+from models import Node, NodeCreate, ModelInfo
 from utils import get_db
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -42,7 +42,7 @@ async def list_nodes(db: Session = Depends(get_db)):
     return nodes
 
 @router.post("/register_model")
-async def register_model(model: ModelInfo):
+async def register_model(model: ModelInfo, db: Session = Depends(get_db)):
     # Обработка данных о модели
-    print(f"Registered model: {model.model_name}")
+    print(f"Registered models: {model.models}")
     return {"status": "success"}
