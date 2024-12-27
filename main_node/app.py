@@ -1,8 +1,12 @@
-from flask import Flask, request, jsonify, render_template
+from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi.responses import HTMLResponse
 from sqlalchemy import create_engine, Column, Integer, String, JSON
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from typing import List
 from sqlalchemy.exc import SQLAlchemyError
+from pydantic import BaseModel
 import os
+from jinja2 import Template
 
 # Конфигурация приложения и базы данных
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@postgres:5432/main_db")
@@ -10,10 +14,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@postgre
 # Инициализация базы данных
 engine = create_engine(DATABASE_URL, connect_args={"connect_timeout": 10})
 Base = declarative_base()
-Session = sessionmaker(bind=engine)
-
-# Flask приложение
-app = Flask(__name__)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 # Определение модели базы данных
 class Node(Base):
@@ -26,56 +27,89 @@ class Node(Base):
 # Создание таблиц
 Base.metadata.create_all(engine)
 
-# Маршруты API
-@app.route('/register', methods=['POST'])
-def register_node():
+# Модели запросов и ответов
+class NodeCreate(BaseModel):
+    node_id: str
+    status: str = "unknown"
+    resources: dict = {}
+
+# FastAPI приложение
+app = FastAPI()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.post("/register")
+async def register_node(node: NodeCreate, db: Session = Depends(get_db)):
     """
     Регистрация или обновление информации о ноде.
     """
-    data = request.json
-    node_id = data.get('node_id')
-    status = data.get('status', 'unknown')
-    resources = data.get('resources', {})
-
-    if not node_id:
-        return jsonify({"error": "node_id is required"}), 400
-
-    session = Session()
     try:
         # Проверка на существующий нод
-        existing_node = session.query(Node).filter_by(node_id=node_id).first()
+        existing_node = db.query(Node).filter_by(node_id=node.node_id).first()
         if existing_node:
-            existing_node.status = status
-            existing_node.resources = resources
+            existing_node.status = node.status
+            existing_node.resources = node.resources
             message = "Node updated successfully"
         else:
             # Создание нового нода
-            node = Node(node_id=node_id, status=status, resources=resources)
-            session.add(node)
+            new_node = Node(
+                node_id=node.node_id,
+                status=node.status,
+                resources=node.resources
+            )
+            db.add(new_node)
             message = "Node registered successfully"
 
-        session.commit()
-        return jsonify({"message": message}), 200
+        db.commit()
+        return {"message": message}
     except SQLAlchemyError as e:
-        session.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        session.close()
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.route('/nodes', methods=['GET'])
-def list_nodes():
+# @app.get("/nodes", response_class=HTMLResponse)
+# async def list_nodes(db: Session = Depends(get_db)):
+#     """
+#     Список всех зарегистрированных нодов.
+#     """
+#     try:
+#         nodes = db.query(Node).all()
+#         # HTML-шаблон для отображения нодов
+#         template = Template("""
+#         <!DOCTYPE html>
+#         <html>
+#         <head>
+#             <title>Nodes List</title>
+#         </head>
+#         <body>
+#             <h1>Registered Nodes</h1>
+#             <ul>
+#                 {% for node in nodes %}
+#                 <li>
+#                     <strong>Node ID:</strong> {{ node.node_id }}<br>
+#                     <strong>Status:</strong> {{ node.status }}<br>
+#                     <strong>Resources:</strong> {{ node.resources }}
+#                 </li>
+#                 {% endfor %}
+#             </ul>
+#         </body>
+#         </html>
+#         """)
+#         return template.render(nodes=nodes)
+#     except SQLAlchemyError as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+@app.get("/nodes", response_model=List[NodeCreate])
+async def list_nodes(db: Session = Depends(get_db)):
     """
-    Список всех зарегистрированных нодов.
+    Получение списка всех зарегистрированных узлов.
     """
-    session = Session()
-    try:
-        nodes = session.query(Node).all()
-        return render_template('nodes.html', nodes=nodes)
-    except SQLAlchemyError as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        session.close()
-
+    nodes = db.query(Node).all()
+    return nodes
 # Главная точка входа
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=5001)

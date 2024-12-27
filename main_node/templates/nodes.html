@@ -1,25 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Registered Nodes</title>
+    <title>Узлы</title>
+    <style>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
   </head>
   <body>
-    <h1>Registered Nodes</h1>
-    <table border="1">
-      <tr>
-        <th>Node ID</th>
-        <th>Status</th>
-        <th>Resources</th>
-      </tr>
-      {% for node in nodes %}
-      <tr>
-        <td>{{ node.node_id }}</td>
-        <td>{{ node.status }}</td>
-        <td>{{ node.resources }}</td>
-      </tr>
-      {% endfor %}
+    <h1>Список узлов</h1>
+    <table id="nodesTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Node ID</th>
+          <th>Status</th>
+          <th>Resources</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
     </table>
+
+    <script>
+      async function fetchNodes() {
+        try {
+          const response = await fetch("/nodes"); // Предполагается, что у вас есть этот эндпоинт
+          if (!response.ok) {
+            throw new Error("Ошибка сети");
+          }
+          const nodes = await response.json();
+          const tableBody = document
+            .getElementById("nodesTable")
+            .getElementsByTagName("tbody")[0];
+          tableBody.innerHTML = ""; // Очистить таблицу перед добавлением новых данных
+
+          nodes.forEach((node) => {
+            const row = tableBody.insertRow();
+            row.insertCell(0).textContent = node.id;
+            row.insertCell(1).textContent = node.node_id;
+            row.insertCell(2).textContent = node.status;
+            row.insertCell(3).textContent = JSON.stringify(node.resources);
+          });
+        } catch (error) {
+          console.error("Ошибка при получении узлов:", error);
+        }
+      }
+
+      // Загрузка узлов при загрузке страницы
+      window.onload = fetchNodes;
+    </script>
   </body>
 </html>
