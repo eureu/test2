@@ -24,5 +24,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  adminer:
+    image: adminer:4.8
+    container_name: adminer
+    depends_on:
+      - postgres
+    ports:
+      - "8081:8081"
+
 volumes:
   postgres_data:
