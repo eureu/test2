@@ -4,6 +4,7 @@ from models import Node, NodeCreate, ModelInfo
 from utils import get_db
 from sqlalchemy.exc import SQLAlchemyError
 import requests
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
