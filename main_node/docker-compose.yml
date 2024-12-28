@@ -11,6 +11,8 @@ services:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/main_db
     depends_on:
       - postgres
+    networks:
+      - main-node-network
 
   postgres:
     image: postgres:15
@@ -23,6 +25,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - main-node-network
 
   adminer:
     image: adminer
@@ -31,6 +35,11 @@ services:
       - postgres
     ports:
       - "8080:8080"
+    networks:
+      - main-node-network
 
 volumes:
   postgres_data:
+
+networks:
+  main-node-network:
