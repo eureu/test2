@@ -10,10 +10,6 @@ router = APIRouter()
 
 @router.post("/register")
 async def register_node(node: NodeCreate, request: Request, db: Session = Depends(get_db)):
-    """
-    Регистрация или обновление информации о ноде.
-    """
-    # Получение IP-адреса клиента
     client_host = request.client.host
     forwarded_for = request.headers.get("X-Forwarded-For")
     real_ip = request.headers.get("X-Real-IP")
@@ -62,10 +58,6 @@ async def proxy_request(
     request: Request,
     db: Session = Depends(get_db)
 ):
-    """
-    Проксирование запросов между нодами через Main Node.
-    """
-    # Поиск целевой ноды (например, child_node_b)
     try:
         node = db.query(Node).filter(Node.node_id == node_id).first()
     except SQLAlchemyError as e:
@@ -74,29 +66,20 @@ async def proxy_request(
     if not node:
         raise HTTPException(status_code=404, detail="Узел не найден")
 
-    # Формируем URL целевого узла
-    # target_url = f"{node.url}/{endpoint}" # на самом деле тут не node.url а node_id
-
-
-    # target_url = f"{node_id}/{endpoint}"
-    # target_url = f'http://{node.ip}/api'
-    # target_url = f'http://{node.ip}/{endpoint}'
     target_url = f'http://{node.ip}:80/{endpoint}' if endpoint else f'http://{node.ip}:80/api'
     print(f"Target URL: {target_url}")
 
 
 
     try:
-        # Проксирование GET или POST запроса
-        
         if request.method == "POST":
             try:
-                body = await request.json()  # Получаем тело запроса
+                body = await request.json()
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Некорректный JSON в запросе: {e}")
             response = requests.post(target_url, json=body)
         else:
-            query_params = dict(request.query_params)  # Параметры GET
+            query_params = dict(request.query_params)
             response = requests.get(target_url, params=query_params)
 
         if response.status_code >= 400:
@@ -106,7 +89,6 @@ async def proxy_request(
     )
 
 
-        # Возвращаем ответ
         return JSONResponse(content=response.json(), status_code=response.status_code)
     except requests.exceptions.RequestException as e:
         raise HTTPException(status_code=500, detail=f"Ошибка при проксировании: {str(e)}")
