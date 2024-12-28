@@ -24,7 +24,7 @@ async def register_node(node: NodeCreate, request: Request, db: Session = Depend
             existing_node.status = node.status
             existing_node.resources = node.resources
             existing_node.models += node.models
-            existing_node.ip = client_ip  # Используем IP клиента
+            existing_node.ip = client_ip + ":80"  # Используем IP клиента
             message = "Node updated successfully"
         else:
             new_node = Node(
@@ -32,7 +32,7 @@ async def register_node(node: NodeCreate, request: Request, db: Session = Depend
                 status=node.status,
                 resources=node.resources,
                 models=node.models,
-                ip=client_ip  # Используем IP клиента
+                ip=client_ip + ":80"  # Используем IP клиента
             )
             db.add(new_node)
             message = "Node registered successfully"
@@ -42,7 +42,7 @@ async def register_node(node: NodeCreate, request: Request, db: Session = Depend
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-        
+
 @router.get("/nodes")
 async def list_nodes(db: Session = Depends(get_db)):
     nodes = db.query(Node).all()
