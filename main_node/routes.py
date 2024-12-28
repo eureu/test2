@@ -8,17 +8,23 @@ import requests
 router = APIRouter()
 
 @router.post("/register")
-async def register_node(node: NodeCreate, db: Session = Depends(get_db)):
+async def register_node(node: NodeCreate, request: Request, db: Session = Depends(get_db)):
     """
     Регистрация или обновление информации о ноде.
     """
+    # Получение IP-адреса клиента
+    client_host = request.client.host
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    real_ip = request.headers.get("X-Real-IP")
+    client_ip = forwarded_for.split(",")[0] if forwarded_for else (real_ip or client_host)
+
     try:
         existing_node = db.query(Node).filter_by(node_id=node.node_id).first()
         if existing_node:
             existing_node.status = node.status
             existing_node.resources = node.resources
             existing_node.models += node.models
-            existing_node.ip = node.ip
+            existing_node.ip = client_ip  # Используем IP клиента
             message = "Node updated successfully"
         else:
             new_node = Node(
@@ -26,17 +32,17 @@ async def register_node(node: NodeCreate, db: Session = Depends(get_db)):
                 status=node.status,
                 resources=node.resources,
                 models=node.models,
-                ip=node.ip
+                ip=client_ip  # Используем IP клиента
             )
             db.add(new_node)
             message = "Node registered successfully"
 
         db.commit()
-        return {"message": message}
+        return {"message": message, "client_ip": client_ip}
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
+        
 @router.get("/nodes")
 async def list_nodes(db: Session = Depends(get_db)):
     nodes = db.query(Node).all()
