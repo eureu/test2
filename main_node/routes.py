@@ -71,16 +71,32 @@ async def proxy_request(
 
 
     # target_url = f"{node_id}/{endpoint}"
-    target_url = f'http://{node.ip}/api'
+    # target_url = f'http://{node.ip}/api'
+    # target_url = f'http://{node.ip}/{endpoint}'
+    target_url = f'http://{node.ip}/{endpoint}' if endpoint else f'http://{node.ip}/api'
+    print(f"Target URL: {target_url}")
+
+
 
     try:
         # Проксирование GET или POST запроса
+        
         if request.method == "POST":
-            body = await request.json()  # Получаем тело запроса
+            try:
+                body = await request.json()  # Получаем тело запроса
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Некорректный JSON в запросе: {e}")
             response = requests.post(target_url, json=body)
         else:
             query_params = dict(request.query_params)  # Параметры GET
             response = requests.get(target_url, params=query_params)
+
+        if response.status_code >= 400:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Ошибка при обращении к ноде: {response.text}"
+    )
+
 
         # Возвращаем ответ
         return JSONResponse(content=response.json(), status_code=response.status_code)
