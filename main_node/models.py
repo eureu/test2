@@ -4,10 +4,8 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from pydantic import BaseModel
 from typing import List, Dict
 
-# Инициализация базы данных
 Base = declarative_base()
 
-# Определение модели базы данных
 class Node(Base):
     __tablename__ = "nodes"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -15,13 +13,14 @@ class Node(Base):
     status = Column(String, nullable=False, default="unknown")
     resources = Column(JSON, nullable=True, default={})
     models = Column(ARRAY(String), nullable=True, default=[])
+    ip = Column(String, unique=True, nullable=False, default="127.0.0.1")
 
-# Модели запросов и ответов
 class NodeCreate(BaseModel):
     node_id: str
     status: str = "unknown"
     resources: Dict = {}
     models: List[str] = []
+    ip: str = "127.0.0.1"
 
 class ModelInfo(BaseModel):
-    models: List[str]  # Список моделей
+    models: List[str]

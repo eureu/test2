@@ -6,7 +6,7 @@ services:
       context: .
     container_name: fastapi_backend
     ports:
-      - "5001:5001" # Обратите внимание на кавычки
+      - "5001:5001"
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/main_db
     depends_on:
@@ -20,7 +20,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: main_db
     ports:
-      - "5432:5432" # Аналогично, кавычки обязательны
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

@@ -1,6 +1,6 @@
-fastapi==0.100.0  # Последняя стабильная версия FastAPI
-uvicorn==0.22.0   # Для запуска приложения FastAPI
-sqlalchemy==1.4.46  # Используется для работы с базой данных
-psycopg2-binary>=2.9.5  # PostgreSQL драйвер для SQLAlchemy
-pydantic==1.10.9  # Для работы с моделями данных
-jinja2==3.1.2     # Шаблонизатор для HTML-страниц
+fastapi==0.100.0
+uvicorn==0.22.0
+sqlalchemy==1.4.46
+psycopg2-binary>=2.9.5
+pydantic==1.10.9
+jinja2==3.1.2

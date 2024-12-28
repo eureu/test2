@@ -16,12 +16,16 @@ async def register_node(node: NodeCreate, db: Session = Depends(get_db)):
         if existing_node:
             existing_node.status = node.status
             existing_node.resources = node.resources
+            existing_node.models += node.models
+            existing_node.ip = node.ip
             message = "Node updated successfully"
         else:
             new_node = Node(
                 node_id=node.node_id,
                 status=node.status,
-                resources=node.resources
+                resources=node.resources,
+                models=node.models,
+                ip=node.ip
             )
             db.add(new_node)
             message = "Node registered successfully"
@@ -32,17 +36,53 @@ async def register_node(node: NodeCreate, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-# @router.get("/nodes", response_model=List[NodeCreate])
 @router.get("/nodes")
 async def list_nodes(db: Session = Depends(get_db)):
-    """
-    Получение списка всех зарегистрированных узлов.
-    """
     nodes = db.query(Node).all()
     return nodes
 
-@router.post("/register_models")
+@router.post("/register-models")
 async def register_model(model: ModelInfo, db: Session = Depends(get_db)):
     # Обработка данных о модели
     print(f"Registered models: {model.models}")
     return {"status": "success"}
+
+@router.api_route("/proxy/{node_id}/{endpoint:path}", methods=["GET", "POST"])
+async def proxy_request(
+    node_id: str,
+    endpoint: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Проксирование запросов между нодами через Main Node.
+    """
+    # Поиск целевой ноды (например, child_node_b)
+    try:
+        node = db.query(Node).filter(Node.node_id == node_id).first()
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка базы данных: {str(e)}")
+
+    if not node:
+        raise HTTPException(status_code=404, detail="Узел не найден")
+
+    # Формируем URL целевого узла
+    # target_url = f"{node.url}/{endpoint}" # на самом деле тут не node.url а node_id
+
+
+    # target_url = f"{node_id}/{endpoint}"
+    target_url = f'http://{node.ip}/api'
+
+    try:
+        # Проксирование GET или POST запроса
+        if request.method == "POST":
+            body = await request.json()  # Получаем тело запроса
+            response = requests.post(target_url, json=body)
+        else:
+            query_params = dict(request.query_params)  # Параметры GET
+            response = requests.get(target_url, params=query_params)
+
+        # Возвращаем ответ
+        return JSONResponse(content=response.json(), status_code=response.status_code)
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка при проксировании: {str(e)}")
