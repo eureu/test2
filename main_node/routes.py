@@ -24,7 +24,7 @@ async def register_node(node: NodeCreate, request: Request, db: Session = Depend
             existing_node.status = node.status
             existing_node.resources = node.resources
             existing_node.models += node.models
-            existing_node.ip = client_ip + ":80"  # Используем IP клиента
+            existing_node.ip = client_ip
             message = "Node updated successfully"
         else:
             new_node = Node(
@@ -32,7 +32,7 @@ async def register_node(node: NodeCreate, request: Request, db: Session = Depend
                 status=node.status,
                 resources=node.resources,
                 models=node.models,
-                ip=client_ip + ":80"  # Используем IP клиента
+                ip=client_ip
             )
             db.add(new_node)
             message = "Node registered successfully"
@@ -80,7 +80,7 @@ async def proxy_request(
     # target_url = f"{node_id}/{endpoint}"
     # target_url = f'http://{node.ip}/api'
     # target_url = f'http://{node.ip}/{endpoint}'
-    target_url = f'http://{node.ip}/{endpoint}' if endpoint else f'http://{node.ip}/api'
+    target_url = f'http://{node.ip}:80/{endpoint}' if endpoint else f'http://{node.ip}:80/api'
     print(f"Target URL: {target_url}")
 
 
